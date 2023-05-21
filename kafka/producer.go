@@ -1,4 +1,4 @@
-package shafka
+package kafka
 
 import (
 	"bufio"
@@ -10,6 +10,29 @@ import (
 
 	"github.com/Shopify/sarama"
 )
+
+func CreateMsgOne(topic string, msg string, partition int, key string) {
+	config := sarama.NewConfig()
+	config.Producer.Return.Successes = true
+	config.Producer.Partitioner = sarama.NewRandomPartitioner
+
+	producer, err := sarama.NewSyncProducer([]string{"localhost:9092"}, config)
+	ExistedErrThenFatal(err)
+
+	defer func() {
+		ExistedErrThenFatal(producer.Close())
+	}()
+
+	kafkaMessage := &sarama.ProducerMessage{
+		Topic: topic,
+		// Partition: int32(partition),
+		Key:   sarama.StringEncoder(key),
+		Value: sarama.StringEncoder(msg),
+	}
+
+	_, _, errr := producer.SendMessage(kafkaMessage)
+	ExistedErrThenFatal(errr)
+}
 
 func CreateMsg() {
 	// Kafka 설정
@@ -33,7 +56,7 @@ func CreateMsg() {
 
 	// Ctrl+C 시그널 처리
 	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
+	signal.Notify(signals, os.Interrupt) // 이게 무슨 말인지 아는게 중요 .
 
 	// 메시지 입력 및 Kafka 전송 루프
 	for {
@@ -54,7 +77,7 @@ func CreateMsg() {
 			if message != "" {
 				// Kafka 메시지 생성
 				kafkaMessage := &sarama.ProducerMessage{
-					Topic: "your_temporary_topic", // 실제 사용하는 Kafka Topic 이름으로 변경해야 합니다.
+					Topic: "temporary-topic2", // 실제 사용하는 Kafka Topic 이름으로 변경해야 합니다.
 					Value: sarama.StringEncoder(message),
 				}
 
