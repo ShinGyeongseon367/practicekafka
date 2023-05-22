@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -109,25 +110,34 @@ func ExistedErrThenPanic(err error) {
 	}
 }
 
-func ReadToLastOffset(topic string, brokers []string) {
+func ReadToLastOffset(topic string, brokers []string, partition int32) {
 	config := sarama.NewConfig()
-	partition := int32(0)
-
 	consumer, err := sarama.NewConsumer(brokers, config)
+	
 	if err != nil {
 		panic(err)
 	}
 	defer consumer.Close()
 
+	fmt.Println("consumer group instance ID : ", config.Consumer.)
+	fmt.Println("Rebalance Strategy:", config.Consumer.Group.Rebalance.Strategy)
+	fmt.Println("Offset Initial:", config.Consumer.Offsets.Initial)
+
 	// 여기서도 sarama.offsetNewest 로 설정하면 가장 최근에 들어오는 데이터가 없으면
 	// 채널에 그냥 머물러 있기때문에 데이터가 있는지 없는지 확인이 필요
-	partitionConsumer, err := consumer.ConsumePartition(topic, partition, 20)
+	partitionConsumer, err := consumer.ConsumePartition(topic, partition, sarama.OffsetOldest)
 
 	if err != nil {
 		panic(err)
 	}
 	defer partitionConsumer.Close()
-	log.Println("이거는 마지막 오프셋 확인을 위한 로그: ", partitionConsumer.HighWaterMarkOffset())
+
+	if partitionConsumer.HighWaterMarkOffset() == 0 {
+		customErr := errors.New("!!!!!!!!!!!!!!!!!!!!!마지막 offset이 0입니다.")
+		log.Fatal(customErr)
+		return
+	}
+
 	for {
 		select {
 		case msg := <-partitionConsumer.Messages():
@@ -142,6 +152,6 @@ func ReadToLastOffset(topic string, brokers []string) {
 	}
 }
 
-func PrintlnTestForPkg() {
-	fmt.Println("print가 정상적으로 되고 있습니다.")
+func ConsumerGroupTest() {
+
 }
