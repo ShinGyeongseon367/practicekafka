@@ -113,13 +113,13 @@ func ExistedErrThenPanic(err error) {
 func ReadToLastOffset(topic string, brokers []string, partition int32) {
 	config := sarama.NewConfig()
 	consumer, err := sarama.NewConsumer(brokers, config)
-	
+
 	if err != nil {
 		panic(err)
 	}
 	defer consumer.Close()
 
-	fmt.Println("consumer group instance ID : ", config.Consumer.)
+	fmt.Println("consumer group instance ID : ", config.Consumer)
 	fmt.Println("Rebalance Strategy:", config.Consumer.Group.Rebalance.Strategy)
 	fmt.Println("Offset Initial:", config.Consumer.Offsets.Initial)
 
